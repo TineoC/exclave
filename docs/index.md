@@ -23,6 +23,22 @@ per enclave. Past a handful of targets, environments become **data**, releases b
 Plus **[the constraint resolver](constraints.md)**, which is the piece no existing open source
 project provides.
 
+## Portability
+
+Cloud-platform agnostic by construction. The resolver depends on a semver parser and a YAML
+parser; the charts contain no cloud SDKs, LoadBalancer annotations, storage classes or ingress
+classes.
+
+- **Requires:** Kubernetes 1.28+, any OCI registry, any GitOps controller (Argo CD or Flux).
+- **Does not require:** any cloud service, a managed control plane, a specific CI system, a
+  service mesh, or network egress at install time.
+- **Runs on:** EKS, GKE, AKS, OpenShift, RKE2, k3s at the edge, bare metal, and air-gapped
+  enclaves.
+
+What differs between platforms is a site value, never a chart edit — set `global.routing.mode` to
+`ingress` or `gateway` and the same service charts land on either. See
+[the contract plane](02-contract.md).
+
 ## Architecture
 
 Three figures — the boundary, the four planes, and how the resolver decides.

@@ -1,0 +1,42 @@
+# Reference Gateway for sites running routing.mode=gateway.
+#
+# This object belongs to the platform team, not to the product. It is where every
+# platform-specific decision lives — which controller implements it, what address
+# it gets, which certificate it terminates. The product chart only emits an
+# HTTPRoute that names this Gateway, so the same chart lands unchanged on GKE
+# Gateway, Istio, Envoy Gateway, Cilium, NGINX Gateway Fabric or an on-prem
+# implementation.
+#
+# That separation is the whole reason Gateway API is the more portable mode.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: platform-gw
+  namespace: gateways
+spec:
+  # The one line that differs between platforms. Everything else is standard.
+  #   GKE            → gke-l7-global-external-managed
+  #   Istio          → istio
+  #   Envoy Gateway  → eg
+  #   Cilium         → cilium
+  #   NGINX Gateway  → nginx
+  gatewayClassName: istio
+
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.example.com"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-example-com
+      allowedRoutes:
+        # Workload namespaces attach their own HTTPRoutes; the platform team
+        # still owns the listener and the certificate.
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: "true"

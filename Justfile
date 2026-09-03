@@ -19,6 +19,7 @@ check: test
     gofmt -l . | (! grep .) || (echo "run: just fmt" && exit 1)
     just validate
     just lint-charts
+    just contract
 
 fmt:
     gofmt -w .
@@ -46,6 +47,10 @@ lint-charts:
     helm dependency update {{quickstart}}/charts/svc
     helm dependency update {{quickstart}}/charts/product
     helm lint {{quickstart}}/charts/product
+
+# Assert the site-values contract: bad input rejected, every platform seam renders.
+contract:
+    ./ci/contract-check.sh
 
 # All four planes against a real cluster. Needs docker, kind and kubectl.
 demo:

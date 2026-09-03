@@ -8,13 +8,46 @@ your architecture, your CI system and probably your employer.
 
 ## The surface should fit on one page
 
+Six values, and every one of them is a place where one platform differs from another:
+
 ```
-registry prefix · pull secrets · trust bundle / PKI · OIDC issuer
-ingress hostnames · storage class · proxy settings · resource tier
+registry prefix · pull secrets · routing (mode + class/gateway)
+proxy settings · trust bundle / PKI · per-service resources
 ```
 
 Everything else gets a working default. **If a customer needs to understand your internals to
 install the product, the contract has failed.**
+
+Two values a real product would add and this example deliberately does not: a **storage class**,
+which needs a stateful component to be worth demonstrating, and an **OIDC issuer**, which needs an
+auth flow. Shipping either here would mean a value nothing consumes — speculative configuration,
+which is the thing this framework argues against. Add them when something actually reads them.
+
+## Routing is the sharpest seam
+
+Where traffic enters is the single most platform-specific thing about a Kubernetes workload, so it
+gets a mode switch rather than a hardcoded answer:
+
+```yaml
+global:
+  routing:
+    mode: gateway              # none | ingress | gateway
+    gateway:
+      name: platform-gw
+      namespace: gateways
+```
+
+- **`ingress`** — ubiquitous, works on every cluster in service today, but pushes platform
+  differences into vendor-specific annotations. Fine, and often the only option on an older
+  cluster.
+- **`gateway`** — emits a Gateway API `HTTPRoute`. The platform team owns a `Gateway` object; the
+  workload chart references it by name and carries **no cloud-specific strings at all**. This is
+  the portable choice wherever the cluster has it: GKE Gateway, Istio, Envoy Gateway, Cilium,
+  NGINX Gateway Fabric and on-prem implementations all consume the same `HTTPRoute`.
+- **`none`** — the default. Nothing is rendered.
+
+The same per-service values (`route.enabled`, `route.host`) drive both. A site moves from an
+on-prem NGINX Ingress to a cloud Gateway by changing one word, and no service chart is touched.
 
 ## Validate it, so failures land early
 

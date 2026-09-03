@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "acme-platform site values",
-  "description": "The configuration contract between the product and an environment. Versioned like an API, because that is what it is.",
+  "description": "The configuration contract between the product and an environment. Versioned like an API, because that is what it is. Every value here is a place where one platform differs from another; nothing platform-specific is baked into the chart.",
   "type": "object",
   "required": ["global", "auth-svc", "billing-svc"],
   "properties": {
@@ -18,6 +18,53 @@
         "imagePullSecrets": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "routing": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How traffic reaches the services. The chart renders an Ingress or an HTTPRoute from the same values; it never learns which platform it is on.",
+          "properties": {
+            "mode": {
+              "enum": ["none", "ingress", "gateway"],
+              "description": "gateway emits a Gateway API HTTPRoute, which keeps platform differences in the Gateway object rather than in vendor annotations."
+            },
+            "ingress": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "className": { "type": "string" },
+                "annotations": { "type": "object" },
+                "tlsSecret": { "type": "string" }
+              }
+            },
+            "gateway": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string" },
+                "namespace": { "type": "string" },
+                "sectionName": { "type": "string" }
+              }
+            }
+          }
+        },
+        "proxy": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Egress proxy. Injected as both upper and lower case env vars, because Go and curl disagree about which they read.",
+          "properties": {
+            "httpProxy":  { "type": "string" },
+            "httpsProxy": { "type": "string" },
+            "noProxy":    { "type": "string" }
+          }
+        },
+        "trustBundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "ConfigMap holding the site's internal CA bundle, mounted read-only.",
+          "properties": {
+            "configMap": { "type": "string" }
+          }
         }
       }
     },
@@ -45,7 +92,19 @@
         },
         "replicas": { "type": "integer", "minimum": 0 },
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-        "resources": { "type": "object" }
+        "resources": { "type": "object" },
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "host": {
+              "type": "string",
+              "pattern": "^$|^(\\*\\.)?([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)*[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+              "description": "DNS hostname. A typo fails here rather than in a cluster nobody can reach."
+            }
+          }
+        }
       }
     }
   }

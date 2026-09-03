@@ -1,0 +1,92 @@
+{{/*
+Routing. One template, two implementations, chosen by a site value.
+
+  global.routing.mode = none      nothing is rendered (the default)
+                      = ingress   networking.k8s.io/v1 Ingress
+                      = gateway   gateway.networking.k8s.io/v1 HTTPRoute
+
+This is the sharpest portability seam in the chart. Ingress is ubiquitous but
+pushes platform differences into vendor-specific annotations; Gateway API moves
+them into a Gateway object the platform team owns, so the workload chart stops
+carrying cloud-specific strings entirely. Both are real answers depending on what
+the receiving cluster already runs, and neither is baked into the chart.
+
+The service never learns which one it got.
+*/}}
+{{- define "common.route" -}}
+{{- $route := .Values.route | default dict -}}
+{{- if $route.enabled -}}
+{{- $r := .Values.global.routing | default dict -}}
+{{- $mode := $r.mode | default "none" -}}
+{{- $host := required "route.enabled is set, so route.host is required" $route.host -}}
+{{- $name := include "common.name" . -}}
+{{- $port := .Values.port | default 8080 -}}
+
+{{- if eq $mode "ingress" -}}
+{{- $ing := $r.ingress | default dict -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with $ing.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $ing.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with $ing.tlsSecret }}
+  tls:
+    - hosts:
+        - {{ $host | quote }}
+      secretName: {{ . }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $name }}
+                port:
+                  name: http
+
+{{- else if eq $mode "gateway" -}}
+{{- $gw := $r.gateway | default dict -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ required "routing.mode is gateway, so global.routing.gateway.name is required" $gw.name }}
+      {{- with $gw.namespace }}
+      namespace: {{ . }}
+      {{- end }}
+      {{- with $gw.sectionName }}
+      sectionName: {{ . }}
+      {{- end }}
+  hostnames:
+    - {{ $host | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        {{- /* HTTPRoute backendRefs take a port number, not a port name. */}}
+        - name: {{ $name }}
+          port: {{ $port }}
+
+{{- else -}}
+{{- fail (printf "%s: route.enabled is true but global.routing.mode is %q; set it to \"ingress\" or \"gateway\"" $name $mode) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

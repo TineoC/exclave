@@ -21,5 +21,7 @@ check:
         -fleet examples/quickstart/fleet/environments
     # Depth-first: svc must vendor `common` before product packages svc.
     - helm dependency update examples/quickstart/charts/svc
+    - helm dependency update examples/quickstart/charts/svc
     - helm dependency update examples/quickstart/charts/product
     - helm lint examples/quickstart/charts/product
+    - ./ci/contract-check.sh

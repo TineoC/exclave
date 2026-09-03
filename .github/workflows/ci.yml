@@ -50,12 +50,7 @@ jobs:
           helm dependency update examples/quickstart/charts/product
           helm lint examples/quickstart/charts/product
 
-      # The contract plane is only real if the schema actually rejects things.
-      - name: schema must reject invalid values
-        run: |
-          if helm template acme examples/quickstart/charts/product \
-               --set global.registry="" >/dev/null 2>&1; then
-            echo "schema accepted an empty registry; the contract is not enforced"
-            exit 1
-          fi
-          echo "schema correctly rejected an empty registry"
+      # The contract plane is only real if the schema enforces it. Same script
+      # the Justfile and GitLab CI run, so the pipelines cannot drift apart.
+      - name: contract check
+        run: ./ci/contract-check.sh

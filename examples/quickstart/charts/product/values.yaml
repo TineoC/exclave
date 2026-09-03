@@ -6,6 +6,28 @@ global:
   product: acme-platform
   imagePullSecrets: []
 
+  # How traffic reaches the services. none | ingress | gateway.
+  # Gateway API is the portable choice where the cluster has it: platform
+  # differences live in the Gateway object, not in this chart.
+  routing:
+    mode: none
+    ingress:
+      className: ""
+      annotations: {}
+      tlsSecret: ""
+    gateway:
+      name: ""
+      namespace: ""
+      sectionName: ""
+
+  # Enclaves usually have both of these. Absent by default.
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: ""
+  trustBundle:
+    configMap: ""
+
 auth-svc:
   image:
     repository: acme/auth-svc
@@ -13,6 +35,9 @@ auth-svc:
     tag: "1.4.3"
   replicas: 1
   port: 8080
+  route:
+    enabled: false
+    host: ""
 
 billing-svc:
   image:
@@ -21,3 +46,6 @@ billing-svc:
     tag: "2.0.1"
   replicas: 1
   port: 8080
+  route:
+    enabled: false
+    host: ""

@@ -83,7 +83,25 @@ That three independent systems converged on the same shape is the reason to trus
 None of them is portable across employers, and none publishes the resolver. This is that,
 in about 400 lines of Go and a set of conventions you can carry anywhere.
 
-## Requirements
+## Portability
+
+The framework is **cloud-platform agnostic by construction**. `go.mod` carries two dependencies —
+a semver parser and a YAML parser. No cloud SDKs, and nothing platform-specific is hardcoded in a
+chart: the ingress class, gateway name, proxy and CA bundle are all values a site supplies.
+
+| | |
+|---|---|
+| **Requires** | Kubernetes 1.28+ · any OCI registry · any GitOps controller (Argo CD or Flux) |
+| **Does not require** | any cloud service · a managed control plane · a specific CI system · a service mesh · network egress at install time |
+| **Runs on** | EKS · GKE · AKS · OpenShift · RKE2 · k3s at the edge · bare metal · air-gapped enclaves |
+
+Everything that genuinely differs between platforms is a **site value**, not a chart edit — that
+is what the [contract plane](docs/02-contract.md) is for. Routing is the sharpest example: set
+`global.routing.mode` to `ingress` for a cluster running NGINX or Traefik, or to `gateway` to emit
+a Gateway API `HTTPRoute` and keep platform differences in a `Gateway` object the platform team
+owns. The service charts are identical either way.
+
+### Tooling
 
 Go 1.24+ for the resolver. `just`, `helm`, `kind`, `kubectl` and a container runtime for the
 demo. `zarf` and `cosign` for the air-gap example.

@@ -1,4 +1,6 @@
 {{- define "common.deployment" -}}
+{{- $proxy := .Values.global.proxy | default dict -}}
+{{- $trust := (.Values.global.trustBundle | default dict).configMap -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,6 +37,25 @@ spec:
               value: {{ .Chart.AppVersion | default .Chart.Version | quote }}
             - name: PORT
               value: {{ .Values.port | default 8080 | quote }}
+            {{- /* Both cases: Go reads HTTP_PROXY, curl and much else read http_proxy. */}}
+            {{- with $proxy.httpProxy }}
+            - name: HTTP_PROXY
+              value: {{ . | quote }}
+            - name: http_proxy
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with $proxy.httpsProxy }}
+            - name: HTTPS_PROXY
+              value: {{ . | quote }}
+            - name: https_proxy
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with $proxy.noProxy }}
+            - name: NO_PROXY
+              value: {{ . | quote }}
+            - name: no_proxy
+              value: {{ . | quote }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /healthz
@@ -50,4 +71,17 @@ spec:
             runAsUser: 65532
             capabilities:
               drop: [ALL]
+          {{- if $trust }}
+          {{- /* readOnlyRootFilesystem is on, so this mount must be read-only too. */}}
+          volumeMounts:
+            - name: trust-bundle
+              mountPath: /etc/ssl/certs/internal
+              readOnly: true
+          {{- end }}
+      {{- if $trust }}
+      volumes:
+        - name: trust-bundle
+          configMap:
+            name: {{ $trust }}
+      {{- end }}
 {{- end -}}

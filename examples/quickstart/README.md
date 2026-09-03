@@ -32,7 +32,30 @@ charts/product/          the umbrella: what a customer installs, plus values.sch
 services/svc/            ~30 lines of Go. The services are not the point.
 reference/argocd/        wiring for customers running Argo CD
 reference/flux/          wiring for customers running Flux
+reference/gateway/       a sample Gateway for sites using routing.mode=gateway
 ```
+
+## Routing
+
+Nothing is routed by default. A site picks a mode and supplies its own hostname:
+
+```bash
+# a cluster running NGINX or Traefik
+helm template acme charts/product \
+  --set global.routing.mode=ingress \
+  --set global.routing.ingress.className=nginx \
+  --set auth-svc.route.enabled=true \
+  --set auth-svc.route.host=auth.example.com
+
+# a cluster with Gateway API — no vendor annotations reach this chart at all
+helm template acme charts/product \
+  --set global.routing.mode=gateway \
+  --set global.routing.gateway.name=platform-gw \
+  --set auth-svc.route.enabled=true \
+  --set auth-svc.route.host=auth.example.com
+```
+
+`just contract` asserts both modes render and that the schema rejects a typo in either.
 
 ## If Argo CD does not converge
 

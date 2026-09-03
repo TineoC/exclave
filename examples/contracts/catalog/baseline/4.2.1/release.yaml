@@ -1,0 +1,30 @@
+product: baseline
+version: 4.2.1
+channel: stable
+
+components:
+  - {name: istio,        version: "1.24.2", image: "harbor.corp.example/baseline/istio@sha256:18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4"}
+  - {name: keycloak,     version: "26.0.7", image: "harbor.corp.example/baseline/keycloak@sha256:5f9c4ab08cac7457e9111a30e4664920607ea2c115a1433e7be8ef7ff0b4b2d7"}
+  - {name: harbor,       version: "2.12.2", image: "harbor.corp.example/baseline/harbor@sha256:6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918"}
+  - {name: kyverno,      version: "1.13.1", image: "harbor.corp.example/baseline/kyverno@sha256:4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"}
+  - {name: gitlab-runner, version: "17.7.0", image: "harbor.corp.example/baseline/gitlab-runner@sha256:4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"}
+
+requires:
+  kubernetes: ">=1.28 <1.32"
+  platform: ">=4.0"
+
+# The first baseline accredited for IL6.
+allowedClassifications: [il2, il4, il5, il6]
+
+provides:
+  stigProfile: rhel9-v1r3
+  fips: true
+
+security:
+  criticalCves: 0
+  highCves: 2
+
+provenance:
+  sbom: evidence/spdx.json
+  attestation: evidence/provenance.intoto.jsonl
+  oscal: evidence/component-definition-4.2.1.json

@@ -39,6 +39,17 @@ jobs:
             -catalog examples/quickstart/catalog \
             -fleet examples/quickstart/fleet/environments
 
+      # The contract portfolio is a second fixture set with the compliance
+      # constraints exercised. The docs quote its output, so CI runs it.
+      - name: portfolio plan
+        run: |
+          go run ./cmd/exclave validate \
+            -catalog examples/contracts/catalog \
+            -fleet examples/contracts/fleet/contracts
+          go run ./cmd/exclave plan \
+            -catalog examples/contracts/catalog \
+            -fleet examples/contracts/fleet/contracts
+
       - uses: azure/setup-helm@v4
         with:
           version: v3.16.2

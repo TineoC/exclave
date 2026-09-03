@@ -273,3 +273,125 @@ func TestNoEligibleAlwaysExplains(t *testing.T) {
 		t.Errorf("note = %q, want it to name the schema constraint", d.Note)
 	}
 }
+
+func intp(i int) *int { return &i }
+
+// The compliance checks are the reason a defense portfolio can use this at all,
+// so their explanations are held to the same standard as the rest: an assessor
+// reading the output must be able to act on it without opening the code.
+func TestComplianceChecks(t *testing.T) {
+	tests := []struct {
+		name       string
+		release    catalog.Release
+		env        fleet.Environment
+		wantEligib bool
+		wantDetail string
+	}{
+		{
+			name: "capability satisfied",
+			release: rel("4.3.0", "stable", func(r *catalog.Release) {
+				r.Provides = map[string]any{"stigProfile": "rhel9-v1r3", "fips": true}
+			}),
+			env: env("ok", func(e *fleet.Environment) {
+				e.RequiresCapabilities = map[string]any{"stigProfile": "rhel9-v1r3", "fips": true}
+			}),
+			wantEligib: true,
+		},
+		{
+			name: "capability mismatch names both sides",
+			release: rel("4.3.0", "stable", func(r *catalog.Release) {
+				r.Provides = map[string]any{"stigProfile": "rhel8-v1r12"}
+			}),
+			env: env("stig", func(e *fleet.Environment) {
+				e.RequiresCapabilities = map[string]any{"stigProfile": "rhel9-v1r3"}
+			}),
+			wantEligib: false,
+			wantDetail: "requires stigProfile=rhel9-v1r3, release provides rhel8-v1r12",
+		},
+		{
+			name:    "capability the release never declares",
+			release: rel("4.3.0", "stable"),
+			env: env("fips", func(e *fleet.Environment) {
+				e.RequiresCapabilities = map[string]any{"fips": true}
+			}),
+			wantEligib: false,
+			wantDetail: "requires fips=true, release declares no fips",
+		},
+		{
+			name: "critical CVEs within the limit",
+			release: rel("4.3.0", "stable", func(r *catalog.Release) {
+				r.Security.CriticalCVEs = intp(0)
+			}),
+			env:        env("clean", func(e *fleet.Environment) { e.MaxCriticalCVEs = intp(0) }),
+			wantEligib: true,
+		},
+		{
+			name: "critical CVEs over the limit",
+			release: rel("4.3.0", "stable", func(r *catalog.Release) {
+				r.Security.CriticalCVEs = intp(3)
+			}),
+			env:        env("strict", func(e *fleet.Environment) { e.MaxCriticalCVEs = intp(0) }),
+			wantEligib: false,
+			wantDetail: "3 critical CVEs, environment allows 0",
+		},
+		{
+			// Silence is not a pass. An unscanned release and a clean one are
+			// different facts, and an environment gating on the count may say so.
+			name:       "unscanned release is refused, not assumed clean",
+			release:    rel("4.3.0", "stable"),
+			env:        env("gated", func(e *fleet.Environment) { e.MaxCriticalCVEs = intp(0) }),
+			wantEligib: false,
+			wantDetail: "carries no scan result",
+		},
+		{
+			name:       "no CVE gate means the count is not checked",
+			release:    rel("4.3.0", "stable"),
+			env:        env("ungated"),
+			wantEligib: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ev := Evaluate(tt.release, tt.env)
+			if ev.Eligible != tt.wantEligib {
+				t.Fatalf("eligible = %v, want %v (blocker: %s)", ev.Eligible, tt.wantEligib, ev.Blocker())
+			}
+			if tt.wantDetail != "" && !strings.Contains(ev.Blocker(), tt.wantDetail) {
+				t.Errorf("blocker = %q, want it to contain %q", ev.Blocker(), tt.wantDetail)
+			}
+		})
+	}
+}
+
+// Go randomises map iteration. If capability checks came out in a different
+// order between runs, the explanation would be unstable and nobody would trust
+// it — so the order is pinned.
+func TestCapabilityOrderIsDeterministic(t *testing.T) {
+	r := rel("4.3.0", "stable", func(r *catalog.Release) {
+		r.Provides = map[string]any{"alpha": "1", "beta": "2", "gamma": "3"}
+	})
+	e := env("many", func(e *fleet.Environment) {
+		e.RequiresCapabilities = map[string]any{"gamma": "3", "alpha": "1", "beta": "2"}
+	})
+
+	var first []string
+	for i := 0; i < 20; i++ {
+		var got []string
+		for _, c := range Evaluate(r, e).Checks {
+			if c.Name == "capability" {
+				got = append(got, c.Detail)
+			}
+		}
+		if i == 0 {
+			first = got
+			continue
+		}
+		if strings.Join(got, "|") != strings.Join(first, "|") {
+			t.Fatalf("capability check order changed between runs:\n  %v\n  %v", first, got)
+		}
+	}
+	if len(first) != 3 || !strings.HasPrefix(first[0], "alpha") {
+		t.Errorf("expected alpha, beta, gamma in sorted order, got %v", first)
+	}
+}

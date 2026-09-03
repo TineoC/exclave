@@ -72,6 +72,29 @@ upgrade-path floor, tier and classification lists, and a channel ladder. Mainten
 are *reported, never scheduled*: this is a resolver, not a cron system. See
 [docs/constraints.md](docs/constraints.md).
 
+## Running a portfolio
+
+Delivering to many environments at once — a defense contractor's contracts, a vendor's customers,
+a fleet of edge sites. Environments become data, releases become a catalog, and compliance becomes
+constraints the resolver checks:
+
+```console
+$ just portfolio
+ENVIRONMENT   CURRENT  TARGET      STATUS
+army-abc-il5  4.0.3    4.2.1       upgrade (4.3.0 blocked: requires platform >=4.2, installed 4.0.3)
+corp-lowside  4.3.0    4.3.0       current (4.4.0-rc.1 blocked: 2 critical CVEs, environment allows 0)
+dla-ghi-il4   3.9.0    —           no eligible release (kubernetes 1.26 not in >=1.28 <1.32)
+navy-xyz-il4  4.2.1    4.3.0       upgrade
+usaf-def-il6  4.2.1    4.2.1       pinned (pinned, already installed)
+```
+
+Capabilities (`stigProfile`, `fips`, whatever your obligations are) match exactly; critical CVE
+counts are a ceiling, and a release with **no scan result is refused rather than assumed clean**.
+Adding an obligation is a YAML key, not a code change.
+
+See [the portfolio pattern](https://tineoc.github.io/exclave/portfolio.html) and
+[`examples/contracts/`](examples/contracts/).
+
 ## Prior art
 
 The pattern is not new; the vendor-neutral assembly of it is. [Big Bang](https://github.com/DoD-Platform-One/bigbang)

@@ -1,0 +1,20 @@
+# Two minor versions behind. 4.3.0 cannot migrate directly from 4.0.x, so the
+# plan routes it through 4.2.1 and says why rather than reporting a bare failure.
+name: army-abc-il5
+tier: production
+classification: il5
+channel: stable
+kubernetes: "1.29"
+current: "4.0.3"
+maxCriticalCves: 0
+requiresCapabilities:
+  stigProfile: rhel9-v1r3
+  fips: true
+maintenanceWindow: "Sun 03:00-05:00 UTC"
+
+cloud: gcp
+orgTopology: contractor-owned
+gcpFolder: folders/100000000003
+billingAccount: 03CDEF-GH4567-89IJKL
+gitlab: enclave
+registry: harbor.army-abc.mil/baseline

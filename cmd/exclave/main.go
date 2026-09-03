@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -143,14 +144,32 @@ func cmdExplain(catalogDir, fleetDir, envName, version string) error {
 		return fmt.Errorf("no environment named %q", envName)
 	}
 
-	fmt.Printf("%s — tier %s, classification %s, channel %s, kubernetes %s, schema %d\n",
-		env.Name, env.Tier, orDash(env.Classification), env.Channel, env.Kubernetes, env.Schema)
+	fmt.Printf("%s — tier %s, classification %s, channel %s, kubernetes %s",
+		env.Name, env.Tier, orDash(env.Classification), env.Channel, env.Kubernetes)
+	// Only mention the gates this environment actually sets. A portfolio that
+	// does not use schema levels should not read "schema 0" on every line.
+	if env.Schema > 0 {
+		fmt.Printf(", schema %d", env.Schema)
+	}
+	if env.MaxCriticalCVEs != nil {
+		fmt.Printf(", max %d critical CVEs", *env.MaxCriticalCVEs)
+	}
+	fmt.Println()
+
 	fmt.Printf("installed: %s", orDash(env.Current))
 	if env.Pinned != "" {
 		fmt.Printf("   pinned: %s", env.Pinned)
 	}
 	if env.MaintenanceWindow != "" {
 		fmt.Printf("   window: %s", env.MaintenanceWindow)
+	}
+	if len(env.RequiresCapabilities) > 0 {
+		keys := make([]string, 0, len(env.RequiresCapabilities))
+		for k := range env.RequiresCapabilities {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		fmt.Printf("\nrequires:  %s", strings.Join(keys, ", "))
 	}
 	fmt.Print("\n\n")
 

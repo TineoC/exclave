@@ -37,6 +37,17 @@ type Environment struct {
 	// MaintenanceWindow is reported, never scheduled. This is a resolver, not cron.
 	MaintenanceWindow string `yaml:"maintenanceWindow"`
 
+	// RequiresCapabilities are the capabilities this environment demands, matched
+	// by exact value against a release's `provides`. This is where accreditation
+	// obligations live — a STIG profile, a FIPS mode, a FedRAMP baseline — so the
+	// resolver does not need a new check per compliance concern.
+	RequiresCapabilities map[string]any `yaml:"requiresCapabilities"`
+
+	// MaxCriticalCVEs is the count this environment tolerates. Nil means the
+	// environment does not gate on CVE counts; zero means a release must have
+	// been scanned and found clean, which is stricter than silence.
+	MaxCriticalCVEs *int `yaml:"maxCriticalCves"`
+
 	// Path is where this environment was loaded from. Not part of the file.
 	Path string `yaml:"-"`
 }

@@ -1,0 +1,19 @@
+# CUI. Customer gave us a folder inside their own GCP organisation, so we own
+# everything below it and nothing above it.
+name: navy-xyz-il4
+tier: production
+classification: il4
+channel: stable
+kubernetes: "1.29"
+current: "4.2.1"
+maxCriticalCves: 0
+requiresCapabilities:
+  stigProfile: rhel9-v1r3
+maintenanceWindow: "Sat 22:00-02:00 UTC"
+
+cloud: gcp
+orgTopology: customer-owned
+gcpFolder: folders/447120983001
+billingAccount: 02BCDE-FG3456-789HIJ
+gitlab: enclave
+registry: harbor.navy-xyz.mil/baseline

@@ -1,0 +1,18 @@
+# The corp build environment itself: where the baseline is built and where every
+# contract's images are mirrored from. It gates on CVEs like any other site,
+# which is why it will not take the release candidate.
+name: corp-lowside
+tier: production
+classification: il2
+channel: candidate
+kubernetes: "1.31"
+current: "4.3.0"
+maxCriticalCves: 0
+maintenanceWindow: "Sun 02:00-06:00 UTC"
+
+cloud: gcp
+orgTopology: contractor-owned
+gcpFolder: folders/100000000002
+billingAccount: 01ABCD-EF2345-6789GH
+gitlab: corp
+registry: harbor.corp.example/library

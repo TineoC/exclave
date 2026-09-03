@@ -1,0 +1,29 @@
+product: baseline
+version: 4.0.3
+channel: stable
+
+components:
+  - {name: istio,        version: "1.20.8", image: "harbor.corp.example/baseline/istio@sha256:3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea"}
+  - {name: keycloak,     version: "24.0.5", image: "harbor.corp.example/baseline/keycloak@sha256:b1f2c0a1f3b7d99a2e2a1a1c9f0e9d8c7b6a5948372615043f2e1d0c9b8a7654"}
+  - {name: harbor,       version: "2.10.2", image: "harbor.corp.example/baseline/harbor@sha256:2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}
+  - {name: gitlab-runner, version: "16.11.0", image: "harbor.corp.example/baseline/gitlab-runner@sha256:fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"}
+
+requires:
+  kubernetes: ">=1.26 <1.30"
+
+allowedClassifications: [il2, il4, il5]
+
+provides:
+  stigProfile: rhel8-v1r12
+  fips: false
+
+security:
+  # Measured by the pipeline, not asserted. This one is why contracts that gate
+  # on critical CVEs cannot take it.
+  criticalCves: 4
+  highCves: 17
+
+provenance:
+  sbom: evidence/spdx.json
+  attestation: evidence/provenance.intoto.jsonl
+  oscal: evidence/component-definition-4.0.3.json

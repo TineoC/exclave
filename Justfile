@@ -1,6 +1,7 @@
 # exclave — every task runs the same way on a laptop and on a runner.
 
 quickstart := "examples/quickstart"
+contracts  := "examples/contracts"
 
 default:
     @just --list --unsorted
@@ -29,6 +30,9 @@ validate:
     go run ./cmd/exclave validate \
       -catalog {{quickstart}}/catalog \
       -fleet {{quickstart}}/fleet/environments
+    go run ./cmd/exclave validate \
+      -catalog {{contracts}}/catalog \
+      -fleet {{contracts}}/fleet/contracts
 
 # Which release does each environment get, and why not the newer ones?
 plan:
@@ -43,6 +47,18 @@ explain env version="":
       -fleet {{quickstart}}/fleet/environments
 
 # Depth-first: svc must vendor `common` before product packages svc.
+# The contract portfolio: which contract may take which baseline, and why not.
+portfolio:
+    @go run ./cmd/exclave plan \
+      -catalog {{contracts}}/catalog \
+      -fleet {{contracts}}/fleet/contracts
+
+# One contract, one baseline version, check by check.
+explain-contract contract version="":
+    @go run ./cmd/exclave explain {{contract}} {{version}} \
+      -catalog {{contracts}}/catalog \
+      -fleet {{contracts}}/fleet/contracts
+
 lint-charts:
     helm dependency update {{quickstart}}/charts/svc
     helm dependency update {{quickstart}}/charts/product

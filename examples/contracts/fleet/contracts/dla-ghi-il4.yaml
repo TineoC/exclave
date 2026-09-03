@@ -1,0 +1,20 @@
+# An older enclave that upgrades its cluster rarely, which is the norm rather
+# than the exception. Nothing in the catalog supports Kubernetes this old: the
+# cluster upgrade has to happen before any baseline upgrade can.
+name: dla-ghi-il4
+tier: production
+classification: il4
+channel: stable
+kubernetes: "1.26"
+current: "3.9.0"
+maxCriticalCves: 0
+requiresCapabilities:
+  stigProfile: rhel9-v1r3
+maintenanceWindow: "quarterly, coordinated"
+
+cloud: gcp
+orgTopology: customer-owned
+gcpFolder: folders/992014477003
+billingAccount: 05EFGH-IJ6789-01KLMN
+gitlab: enclave
+registry: harbor.dla-ghi.mil/baseline

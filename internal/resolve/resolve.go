@@ -9,6 +9,7 @@ package resolve
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/Masterminds/semver/v3"
 
@@ -161,6 +162,38 @@ func Evaluate(r catalog.Release, e fleet.Environment) Evaluation {
 		}
 	}
 
+	// Capabilities: exact match on declared values. Accreditation obligations live
+	// here — a STIG profile, a FIPS mode, a FedRAMP baseline — so the resolver
+	// does not grow a bespoke check for every new compliance concern.
+	// Keys are sorted: map order in Go is random, and a resolver whose
+	// explanation changes between runs is not one anybody will trust.
+	for _, k := range sortedKeys(e.RequiresCapabilities) {
+		want := scalar(e.RequiresCapabilities[k])
+		got, declared := r.Provides[k]
+		switch {
+		case !declared:
+			add("capability", false, "requires %s=%s, release declares no %s", k, want, k)
+		case scalar(got) != want:
+			add("capability", false, "requires %s=%s, release provides %s", k, want, scalar(got))
+		default:
+			add("capability", true, "%s=%s satisfied", k, want)
+		}
+	}
+
+	// Critical CVEs. An unscanned release is not the same as a clean one, and an
+	// environment that gates on the count is entitled to refuse silence.
+	if e.MaxCriticalCVEs != nil {
+		limit := *e.MaxCriticalCVEs
+		switch {
+		case r.Security.CriticalCVEs == nil:
+			add("cve", false, "release carries no scan result, environment requires at most %d critical", limit)
+		case *r.Security.CriticalCVEs > limit:
+			add("cve", false, "%d critical CVEs, environment allows %d", *r.Security.CriticalCVEs, limit)
+		default:
+			add("cve", true, "%d critical CVEs within limit of %d", *r.Security.CriticalCVEs, limit)
+		}
+	}
+
 	ev.Eligible = true
 	for _, c := range ev.Checks {
 		if !c.OK {
@@ -169,6 +202,23 @@ func Evaluate(r catalog.Release, e fleet.Environment) Evaluation {
 		}
 	}
 	return ev
+}
+
+// scalar renders a YAML scalar for comparison and display. Capability values are
+// booleans, strings and numbers; comparing their rendered form avoids caring
+// which of those the YAML parser chose.
+func scalar(v any) string { return fmt.Sprint(v) }
+
+func sortedKeys(m map[string]any) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Plan resolves every environment against the catalog.

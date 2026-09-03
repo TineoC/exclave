@@ -1,0 +1,23 @@
+# Classified, air-gapped, and frozen. The ATO covers 4.2.1 specifically, so the
+# baseline is pinned until re-accreditation completes — a pin is a compliance
+# decision here, not an oversight.
+name: usaf-def-il6
+tier: production
+classification: il6
+channel: stable
+kubernetes: "1.29"
+current: "4.2.1"
+pinned: "4.2.1"
+maxCriticalCves: 0
+requiresCapabilities:
+  stigProfile: rhel9-v1r3
+  fips: true
+maintenanceWindow: "quarterly, coordinated"
+
+cloud: gcp-assured-workloads
+orgTopology: customer-owned
+gcpFolder: folders/558231094002
+billingAccount: 04DEFG-HI5678-90JKLM
+gitlab: enclave
+registry: harbor.usaf-def.smil/baseline
+airGapped: true

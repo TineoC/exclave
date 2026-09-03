@@ -19,6 +19,12 @@ check:
     - go run ./cmd/exclave plan
         -catalog examples/quickstart/catalog
         -fleet examples/quickstart/fleet/environments
+    - go run ./cmd/exclave validate
+        -catalog examples/contracts/catalog
+        -fleet examples/contracts/fleet/contracts
+    - go run ./cmd/exclave plan
+        -catalog examples/contracts/catalog
+        -fleet examples/contracts/fleet/contracts
     # Depth-first: svc must vendor `common` before product packages svc.
     - helm dependency update examples/quickstart/charts/svc
     - helm dependency update examples/quickstart/charts/svc

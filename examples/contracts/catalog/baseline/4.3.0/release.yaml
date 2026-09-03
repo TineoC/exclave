@@ -1,0 +1,31 @@
+product: baseline
+version: 4.3.0
+channel: stable
+
+components:
+  - {name: istio,        version: "1.24.3", image: "harbor.corp.example/baseline/istio@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+  - {name: keycloak,     version: "26.1.0", image: "harbor.corp.example/baseline/keycloak@sha256:7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730"}
+  - {name: harbor,       version: "2.12.3", image: "harbor.corp.example/baseline/harbor@sha256:c837649cce43f2729138c9bd2c0d0f1c6b1c1e5b9d3e5d2a7b0c5f8e2d1a9b3c"}
+  - {name: kyverno,      version: "1.13.2", image: "harbor.corp.example/baseline/kyverno@sha256:a3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478"}
+  - {name: gitlab-runner, version: "17.8.1", image: "harbor.corp.example/baseline/gitlab-runner@sha256:9b871512327c09b207b4e4f0b5b0b3e5a2f8a4f6c4d8e9a1b2c3d4e5f6071829"}
+
+requires:
+  kubernetes: ">=1.28 <1.32"
+  # This baseline only knows how to migrate from 4.2 or later. A contract on
+  # 4.0.x steps through 4.2.1 first, and the plan says so rather than failing.
+  platform: ">=4.2"
+
+allowedClassifications: [il2, il4, il5, il6]
+
+provides:
+  stigProfile: rhel9-v1r3
+  fips: true
+
+security:
+  criticalCves: 0
+  highCves: 1
+
+provenance:
+  sbom: evidence/spdx.json
+  attestation: evidence/provenance.intoto.jsonl
+  oscal: evidence/component-definition-4.3.0.json

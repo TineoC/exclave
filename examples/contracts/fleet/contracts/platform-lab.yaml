@@ -1,0 +1,16 @@
+# Your own lab on the corp low side. Tracks candidate so release candidates get
+# exercised somewhere before any contract sees them.
+name: platform-lab
+tier: lab
+classification: il2
+channel: candidate
+kubernetes: "1.31"
+current: "4.3.0"
+
+# --- record fields: documentation for the contract, not read by the resolver ---
+cloud: gcp
+orgTopology: contractor-owned
+gcpFolder: folders/100000000001
+billingAccount: 01ABCD-EF2345-6789GH
+gitlab: corp
+registry: harbor.corp.example/platform-lab

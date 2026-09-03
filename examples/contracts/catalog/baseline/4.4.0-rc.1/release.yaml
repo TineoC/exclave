@@ -1,0 +1,33 @@
+product: baseline
+version: 4.4.0-rc.1
+# Not on stable. Only contracts tracking candidate or edge will consider it.
+channel: candidate
+
+components:
+  - {name: istio,        version: "1.25.0", image: "harbor.corp.example/baseline/istio@sha256:0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"}
+  - {name: keycloak,     version: "26.2.0", image: "harbor.corp.example/baseline/keycloak@sha256:8f14e45fceea167a5a36dedd4bea2543ba1e3e2c1e6b0f9e1d0a4b6c8d2e3f5a"}
+  - {name: harbor,       version: "2.13.0", image: "harbor.corp.example/baseline/harbor@sha256:1f0e3dad99908345f7439f8ffabdffc418f0b465b3a1e4f0a8b7c6d5e4f3a2b1"}
+  - {name: kyverno,      version: "1.14.0", image: "harbor.corp.example/baseline/kyverno@sha256:98f13708210194c475687be6106a3b84fdb5f5b1c6b2d3e4f5a6b7c8d9e0f1a2"}
+  - {name: gitlab-runner, version: "17.9.0", image: "harbor.corp.example/baseline/gitlab-runner@sha256:c51ce410c124a10e0db5e4b97fc2af39d5f4f3a2b1c0d9e8f7a6b5c4d3e2f1a0"}
+
+requires:
+  kubernetes: ">=1.30 <1.33"
+  platform: ">=4.3"
+
+# Not yet accredited above IL4.
+allowedClassifications: [il2, il4]
+
+provides:
+  stigProfile: rhel9-v1r3
+  fips: true
+
+security:
+  # Two criticals outstanding. Any contract gating on zero refuses this, which is
+  # the point of measuring rather than promising.
+  criticalCves: 2
+  highCves: 9
+
+provenance:
+  sbom: evidence/spdx.json
+  attestation: evidence/provenance.intoto.jsonl
+  oscal: evidence/component-definition-4.4.0-rc.1.json

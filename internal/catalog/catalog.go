@@ -39,6 +39,21 @@ type Forbids struct {
 type Provenance struct {
 	SBOM        string `yaml:"sbom"`
 	Attestation string `yaml:"attestation"`
+	// OSCAL is the machine-readable control implementation. An environment's
+	// System Security Plan inherits from this and documents only its deltas,
+	// which is what turns a per-site SSP from a document into a diff.
+	OSCAL string `yaml:"oscal"`
+}
+
+// Security carries the measured facts an environment gates on. These are
+// produced by the pipeline that built the release — a scanner's output, not a
+// promise — so they are counts rather than booleans.
+type Security struct {
+	// CriticalCVEs is the count at build time. A pointer so "not scanned" is
+	// distinguishable from "scanned, found zero"; the difference matters to an
+	// assessor and an environment may refuse the former.
+	CriticalCVEs *int `yaml:"criticalCves"`
+	HighCVEs     *int `yaml:"highCves"`
 }
 
 // Release is one self-describing product version.
@@ -51,6 +66,13 @@ type Release struct {
 	Forbids                Forbids     `yaml:"forbids"`
 	AllowedClassifications []string    `yaml:"allowedClassifications"`
 	Provenance             Provenance  `yaml:"provenance"`
+	Security               Security    `yaml:"security"`
+
+	// Provides declares capabilities this release delivers — a STIG profile it
+	// was hardened against, an accreditation it carries, a FIPS mode it runs in.
+	// Environments match against these by exact value rather than the resolver
+	// growing a bespoke check per compliance concern.
+	Provides map[string]any `yaml:"provides"`
 
 	// Path is where this release was loaded from. Not part of the file.
 	Path string `yaml:"-"`

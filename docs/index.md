@@ -39,6 +39,11 @@ What differs between platforms is a site value, never a chart edit — set `glob
 `ingress` or `gateway` and the same service charts land on either. See
 [the contract plane](02-contract.md).
 
+## Running a portfolio
+
+Delivering one product to many environments at once — contracts, impact levels, compliance as
+constraints, and inherited accreditation. **[The portfolio pattern →](portfolio.md)**
+
 ## Architecture
 
 Three figures — the boundary, the four planes, and how the resolver decides.

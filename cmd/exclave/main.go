@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -22,10 +23,20 @@ Usage:
   exclave explain <environment>       every release tested against one environment
   exclave explain <environment> <ver> one release tested, constraint by constraint
   exclave validate                    structural check of the catalog and fleet
+  exclave manifest                    deterministic digest of the catalog, for signing
+  exclave verify                      check the catalog against a signed manifest
+  exclave redact                      roll-up with site identities removed
 
 Flags:
-  -catalog dir   release catalog (default "catalog")
-  -fleet dir     environment descriptors (default "fleet/environments")
+  -catalog dir             release catalog (default "catalog")
+  -fleet dir               environment descriptors (default "fleet/environments")
+  -format text|json        output format (default "text")
+  -max-classification lvl  refuse descriptors above this level (il2, il4, il5, il6)
+  -manifest file           manifest to verify against
+  -keep-classification     include classification in redacted output (cleared receivers only)
+
+Redaction requires EXCLAVE_REDACTION_SALT. Signing a manifest is external:
+  exclave manifest > catalog.manifest && cosign sign-blob catalog.manifest
 `
 
 func main() {
@@ -40,14 +51,25 @@ func run(args []string) error {
 	fs.SetOutput(os.Stderr)
 	catalogDir := fs.String("catalog", "catalog", "release catalog directory")
 	fleetDir := fs.String("fleet", "fleet/environments", "environment descriptor directory")
+	format := fs.String("format", "text", "output format: text or json")
+	maxClass := fs.String("max-classification", "", "refuse descriptors above this level")
+	manifestFile := fs.String("manifest", "", "manifest file to verify against")
+	keepClass := fs.Bool("keep-classification", false, "include classification in redacted output")
 	fs.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 
 	// Allow flags on either side of the positional arguments. Go's flag package
 	// stops at the first non-flag argument, so split them apart first.
-	// Every flag this command defines takes a value; revisit if a boolean is added.
 	var cmd string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		cmd, args = args[0], args[1:]
+	}
+	isBool := func(a string) bool {
+		f := fs.Lookup(strings.TrimLeft(a, "-"))
+		if f == nil {
+			return false
+		}
+		b, ok := f.Value.(interface{ IsBoolFlag() bool })
+		return ok && b.IsBoolFlag()
 	}
 	var flags, positional []string
 	for i := 0; i < len(args); i++ {
@@ -57,7 +79,9 @@ func run(args []string) error {
 			continue
 		}
 		flags = append(flags, a)
-		if !strings.Contains(a, "=") && i+1 < len(args) {
+		// A boolean flag takes no value; consuming the next argument would eat a
+		// positional. Everything else needs its value pulled along.
+		if !strings.Contains(a, "=") && !isBool(a) && i+1 < len(args) {
 			flags = append(flags, args[i+1])
 			i++
 		}
@@ -65,10 +89,13 @@ func run(args []string) error {
 	if err := fs.Parse(flags); err != nil {
 		return err
 	}
+	if *format != "text" && *format != "json" {
+		return fmt.Errorf("unknown format %q (want text or json)", *format)
+	}
 
 	switch cmd {
 	case "plan":
-		return cmdPlan(*catalogDir, *fleetDir)
+		return cmdPlan(*catalogDir, *fleetDir, *maxClass, *format)
 	case "explain":
 		if len(positional) < 1 {
 			return fmt.Errorf("explain needs an environment name")
@@ -77,9 +104,15 @@ func run(args []string) error {
 		if len(positional) > 1 {
 			version = positional[1]
 		}
-		return cmdExplain(*catalogDir, *fleetDir, positional[0], version)
+		return cmdExplain(*catalogDir, *fleetDir, *maxClass, positional[0], version)
 	case "validate":
-		return cmdValidate(*catalogDir, *fleetDir)
+		return cmdValidate(*catalogDir, *fleetDir, *maxClass)
+	case "manifest":
+		return cmdManifest(*catalogDir)
+	case "verify":
+		return cmdVerify(*catalogDir, *manifestFile)
+	case "redact":
+		return cmdRedact(*catalogDir, *fleetDir, *maxClass, *format, *keepClass)
 	case "", "help", "-h", "--help":
 		fmt.Print(usage)
 		return nil
@@ -88,47 +121,131 @@ func run(args []string) error {
 	}
 }
 
-func load(catalogDir, fleetDir string) ([]catalog.Release, []fleet.Environment, error) {
+func load(catalogDir, fleetDir, maxClass string) ([]catalog.Release, []fleet.Environment, error) {
 	releases, err := catalog.Load(catalogDir)
 	if err != nil {
 		return nil, nil, err
 	}
-	envs, err := fleet.Load(fleetDir)
+	envs, err := fleet.Load(fleetDir, maxClass)
 	if err != nil {
 		return nil, nil, err
 	}
 	return releases, envs, nil
 }
 
-func cmdPlan(catalogDir, fleetDir string) error {
-	releases, envs, err := load(catalogDir, fleetDir)
+type planRow struct {
+	Environment    string `json:"environment"`
+	Classification string `json:"classification,omitempty"`
+	Current        string `json:"current,omitempty"`
+	Target         string `json:"target,omitempty"`
+	Status         string `json:"status"`
+	Note           string `json:"note,omitempty"`
+}
+
+func cmdPlan(catalogDir, fleetDir, maxClass, format string) error {
+	releases, envs, err := load(catalogDir, fleetDir, maxClass)
 	if err != nil {
 		return err
+	}
+	decisions := resolve.Plan(releases, envs)
+
+	if format == "json" {
+		rows := make([]planRow, 0, len(decisions))
+		for _, d := range decisions {
+			rows = append(rows, planRow{
+				Environment:    d.Environment.Name,
+				Classification: d.Environment.Classification,
+				Current:        d.Environment.Current,
+				Target:         d.Target,
+				Status:         string(d.Status),
+				Note:           d.Note,
+			})
+		}
+		return writeJSON(rows)
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ENVIRONMENT\tCURRENT\tTARGET\tSTATUS")
-
-	for _, d := range resolve.Plan(releases, envs) {
-		current := d.Environment.Current
-		if current == "" {
-			current = "—"
-		}
-		target := d.Target
-		if target == "" {
-			target = "—"
-		}
+	for _, d := range decisions {
 		status := string(d.Status)
 		if d.Note != "" {
 			status = fmt.Sprintf("%s (%s)", status, d.Note)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", d.Environment.Name, current, target, status)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+			d.Environment.Name, orDash(d.Environment.Current), orDash(d.Target), status)
 	}
 	return w.Flush()
 }
 
-func cmdExplain(catalogDir, fleetDir, envName, version string) error {
-	releases, envs, err := load(catalogDir, fleetDir)
+func cmdRedact(catalogDir, fleetDir, maxClass, format string, keepClass bool) error {
+	salt := os.Getenv("EXCLAVE_REDACTION_SALT")
+	releases, envs, err := load(catalogDir, fleetDir, maxClass)
+	if err != nil {
+		return err
+	}
+	rows, err := resolve.Redact(resolve.Plan(releases, envs), salt, keepClass)
+	if err != nil {
+		return err
+	}
+
+	if format == "json" {
+		return writeJSON(rows)
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	header := "SITE\tCURRENT\tTARGET\tSTATUS"
+	if keepClass {
+		header = "SITE\tLEVEL\tCURRENT\tTARGET\tSTATUS"
+	}
+	fmt.Fprintln(w, header)
+	for _, r := range rows {
+		status := r.Status
+		if r.Note != "" {
+			status = fmt.Sprintf("%s (%s)", status, r.Note)
+		}
+		if keepClass {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.SiteID, r.Classification, orDash(r.Current), orDash(r.Target), status)
+		} else {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.SiteID, orDash(r.Current), orDash(r.Target), status)
+		}
+	}
+	return w.Flush()
+}
+
+func cmdManifest(catalogDir string) error {
+	m, err := catalog.BuildManifest(catalogDir)
+	if err != nil {
+		return err
+	}
+	fmt.Print(m)
+	return nil
+}
+
+func cmdVerify(catalogDir, manifestFile string) error {
+	if manifestFile == "" {
+		return fmt.Errorf("verify needs -manifest <file>")
+	}
+	b, err := os.ReadFile(manifestFile)
+	if err != nil {
+		return err
+	}
+	drift, err := catalog.VerifyManifest(catalogDir, string(b))
+	if err != nil {
+		return err
+	}
+	if len(drift) == 0 {
+		fmt.Printf("ok: %s matches %s\n", catalogDir, manifestFile)
+		return nil
+	}
+	// Name the files. "Does not match its signature" sends someone hunting.
+	fmt.Fprintf(os.Stderr, "catalog does not match %s:\n", manifestFile)
+	for _, d := range drift {
+		fmt.Fprintf(os.Stderr, "  %-24s %s\n", d.Reason, d.Path)
+	}
+	return fmt.Errorf("%d file(s) drifted from the signed manifest", len(drift))
+}
+
+func cmdExplain(catalogDir, fleetDir, maxClass, envName, version string) error {
+	releases, envs, err := load(catalogDir, fleetDir, maxClass)
 	if err != nil {
 		return err
 	}
@@ -146,8 +263,6 @@ func cmdExplain(catalogDir, fleetDir, envName, version string) error {
 
 	fmt.Printf("%s — tier %s, classification %s, channel %s, kubernetes %s",
 		env.Name, env.Tier, orDash(env.Classification), env.Channel, env.Kubernetes)
-	// Only mention the gates this environment actually sets. A portfolio that
-	// does not use schema levels should not read "schema 0" on every line.
 	if env.Schema > 0 {
 		fmt.Printf(", schema %d", env.Schema)
 	}
@@ -202,14 +317,24 @@ func cmdExplain(catalogDir, fleetDir, envName, version string) error {
 	return nil
 }
 
-func cmdValidate(catalogDir, fleetDir string) error {
-	releases, envs, err := load(catalogDir, fleetDir)
+func cmdValidate(catalogDir, fleetDir, maxClass string) error {
+	releases, envs, err := load(catalogDir, fleetDir, maxClass)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("ok: %d releases in %s, %d environments in %s\n",
+	fmt.Printf("ok: %d releases in %s, %d environments in %s",
 		len(releases), catalogDir, len(envs), fleetDir)
+	if maxClass != "" {
+		fmt.Printf(" (all at or below %s)", maxClass)
+	}
+	fmt.Println()
 	return nil
+}
+
+func writeJSON(v any) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
 }
 
 func orDash(s string) string {

@@ -74,3 +74,8 @@ jobs:
       # "Cloud-agnostic" is a claim; this is what makes it a tested one.
       - name: landing zone interface parity
         run: ./ci/landing-zone-check.sh
+
+      # Ceiling, signed manifest and redaction. These fail silently in the real
+      # world, so they are asserted rather than trusted.
+      - name: portfolio controls
+        run: ./ci/portfolio-check.sh

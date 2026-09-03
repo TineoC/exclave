@@ -22,6 +22,7 @@ check: test
     just lint-charts
     just contract
     just landing-zone
+    just portfolio-check
 
 fmt:
     gofmt -w .
@@ -72,6 +73,20 @@ contract:
 # Assert the landing-zone interface is identical across every provider.
 landing-zone:
     ./ci/landing-zone-check.sh
+
+# Assert the portfolio controls: ceiling, signed manifest, redaction.
+portfolio-check:
+    ./ci/portfolio-check.sh
+
+# Deterministic digest of the catalog. Sign the output with cosign.
+manifest:
+    @go run ./cmd/exclave manifest -catalog {{contracts}}/catalog
+
+# Roll-up with site identities removed. Needs EXCLAVE_REDACTION_SALT.
+redact:
+    @go run ./cmd/exclave redact \
+      -catalog {{contracts}}/catalog \
+      -fleet {{contracts}}/fleet/contracts
 
 # All four planes against a real cluster. Needs docker, kind and kubectl.
 demo:

@@ -105,9 +105,45 @@ func (e Environment) Validate() error {
 	return nil
 }
 
+// ClassificationRank orders DoD impact levels. IL1 and IL3 were consolidated by
+// the Cloud Computing SRG — IL1 into IL2, IL3 into IL4 — so they are not levels
+// and are deliberately absent.
+var ClassificationRank = map[string]int{
+	"il2": 0,
+	"il4": 1,
+	"il5": 2,
+	"il6": 3,
+}
+
+// ErrOverClassified reports a descriptor above the ceiling the caller allows.
+type ErrOverClassified struct {
+	Path, Name, Classification, Ceiling string
+}
+
+func (e ErrOverClassified) Error() string {
+	return fmt.Sprintf(
+		"%s: environment %q is classified %s, above the %s ceiling this fleet allows — "+
+			"descriptors above the ceiling belong inside their own boundary, not here",
+		e.Path, e.Name, e.Classification, e.Ceiling)
+}
+
 // Load reads every YAML file under dir as an environment, sorted by name.
-func Load(dir string) ([]Environment, error) {
+//
+// maxClassification is an information-flow control, not a filter: a descriptor
+// above the ceiling is an error, never silently skipped. A fleet directory is an
+// aggregate, and an aggregate of site descriptors is more sensitive than any one
+// of them — it maps which sites run which versions and when each is in
+// maintenance. The corp low side sets a ceiling so it cannot ingest an
+// over-classified descriptor even when one is committed by mistake.
+//
+// An empty ceiling disables the check.
+func Load(dir, maxClassification string) ([]Environment, error) {
 	var envs []Environment
+
+	ceiling, bounded := ClassificationRank[maxClassification]
+	if maxClassification != "" && !bounded {
+		return nil, fmt.Errorf("unknown classification ceiling %q (want il2, il4, il5 or il6)", maxClassification)
+	}
 
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -131,6 +167,18 @@ func Load(dir string) ([]Environment, error) {
 		if err := e.Validate(); err != nil {
 			return err
 		}
+		if bounded {
+			rank, known := ClassificationRank[e.Classification]
+			// An unrecognised classification is refused rather than assumed low.
+			// Guessing in this direction is how spillage happens.
+			if !known || rank > ceiling {
+				return ErrOverClassified{
+					Path: path, Name: e.Name,
+					Classification: orUnset(e.Classification),
+					Ceiling:        maxClassification,
+				}
+			}
+		}
 		envs = append(envs, e)
 		return nil
 	})
@@ -143,4 +191,11 @@ func Load(dir string) ([]Environment, error) {
 
 	sort.Slice(envs, func(i, j int) bool { return envs[i].Name < envs[j].Name })
 	return envs, nil
+}
+
+func orUnset(s string) string {
+	if s == "" {
+		return "(unset)"
+	}
+	return s
 }

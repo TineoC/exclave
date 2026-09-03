@@ -39,6 +39,13 @@ What differs between platforms is a site value, never a chart edit — set `glob
 `ingress` or `gateway` and the same service charts land on either. See
 [the contract plane](02-contract.md).
 
+## Using it for real
+
+Holding a real fleet safely — what is sensitive, why the aggregate is worse than any one
+descriptor, the classification ceiling, signed catalogs and redacted roll-ups.
+**[Operating →](operating.md)** · **[Adding a contract →](onboarding.md)** ·
+**[Known gaps →](gaps.md)**
+
 ## Running a portfolio
 
 Delivering one product to many environments at once — contracts, impact levels, compliance as

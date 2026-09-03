@@ -92,7 +92,16 @@ Capabilities (`stigProfile`, `fips`, whatever your obligations are) match exactl
 counts are a ceiling, and a release with **no scan result is refused rather than assumed clean**.
 Adding an obligation is a YAML key, not a code change.
 
-See [the portfolio pattern](https://tineoc.github.io/exclave/portfolio.html) and
+Holding a real fleet safely is its own problem: a directory of site descriptors maps which sites run
+known-vulnerable versions and when each is unattended, which is more sensitive than any one file in
+it. So the catalog is shareable and **the fleet is not** — the resolver runs inside each boundary, a
+classification ceiling stops the low side ingesting what it must not hold, the catalog is signed, and
+the roll-up crosses boundaries redacted, released by a human rather than a pipe.
+
+See [the portfolio pattern](https://tineoc.github.io/exclave/portfolio.html),
+[operating it for real](https://tineoc.github.io/exclave/operating.html),
+[adding a contract](https://tineoc.github.io/exclave/onboarding.html),
+[known gaps](https://tineoc.github.io/exclave/gaps.html), and
 [`examples/contracts/`](examples/contracts/).
 
 ## Prior art

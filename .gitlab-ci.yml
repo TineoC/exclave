@@ -34,3 +34,4 @@ check:
     - curl -fsSL -o /tmp/tf.zip https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
       && unzip -q -o /tmp/tf.zip -d /usr/local/bin
     - ./ci/landing-zone-check.sh
+    - ./ci/portfolio-check.sh

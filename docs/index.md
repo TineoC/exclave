@@ -23,6 +23,11 @@ per enclave. Past a handful of targets, environments become **data**, releases b
 Plus **[the constraint resolver](constraints.md)**, which is the piece no existing open source
 project provides.
 
+## Architecture
+
+Three figures — the boundary, the four planes, and how the resolver decides.
+**[Architecture →](architecture.md)**
+
 ## Decisions
 
 The [architecture decision records](adr/) capture the calls that were reversed while this was

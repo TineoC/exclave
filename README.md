@@ -38,7 +38,7 @@ become a **catalog**, and deployment becomes a **solver plus agents**.
 | **[Distribution](docs/03-distribution.md)** | Artifacts cross boundaries as verified copies; no runtime egress, ever | Installs fail at the worst possible moment because something reached for the internet |
 | **[Reconciliation](docs/04-reconciliation.md)** | An agent *inside* the environment pulls desired state and converges | You need network access into customer environments, which is the thing you cannot have |
 
-Full write-up: **[the documentation site](https://tineoc.github.io/exclave/)**.
+Full write-up: **[the documentation site](https://tineoc.github.io/exclave/)** · diagrams: **[Architecture](https://tineoc.github.io/exclave/architecture.html)**.
 
 ## Try it
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Four Planes — exclave</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --paper:#f2f4f6; --ink:#15181c; --muted:#5a616b; --accent:#c2410c;
+    --font-serif:'IBM Plex Serif',Georgia,serif;
+    --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+    --font-alt:'IBM Plex Sans',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);
+       display:block;padding:2rem 2rem 2.5rem}
+  .frame{max-width:1280px;width:100%}
+  .eyebrow{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.18em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+  h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:600;
+     letter-spacing:-0.02em;line-height:1.15;margin-bottom:0.5rem}
+  .sub{font-family:var(--font-alt);font-size:0.95rem;color:var(--muted);max-width:62ch;margin-bottom:1.5rem}
+  svg{width:100%;min-width:900px;display:block}
+</style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Layer stack · Framework spine</p>
+  <h1>Four planes, and what each one refuses to compromise</h1>
+  <p class="sub">Each plane holds one invariant. The contract plane is the highest-leverage of the four — a values file outlives the architecture, the CI system, and usually the employer.</p>
+
+<svg viewBox="0 0 1280 720" role="img" aria-labelledby="planes-title planes-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="planes-title">The four planes of disconnected software delivery</title>
+<desc id="planes-desc">A stack of four planes read top to bottom in delivery order: artifact, which is immutable, signed and self-describing; contract, a versioned schema-validated configuration API and the highest-leverage layer; distribution, verified copies across boundaries with no runtime egress; and reconciliation, an agent inside the environment that pulls and converges.</desc>
+
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#5a616b"/></marker>
+</defs>
+
+<rect width="100%" height="100%" fill="#f2f4f6"/>
+
+<!-- direction indicator, left margin, outside the stack -->
+<text x="100" y="160" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.14em">DELIVERY</text>
+<line x1="100" y1="176" x2="100" y2="496" stroke="#8a929e" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- ============ row fills ============ -->
+<rect x="140" y="144" width="1000" height="96" fill="#ffffff"/>
+<rect x="140" y="240" width="1000" height="96" fill="rgba(194,65,12,0.08)"/>
+<rect x="140" y="336" width="1000" height="96" fill="#ffffff"/>
+<rect x="140" y="432" width="1000" height="96" fill="#ffffff"/>
+
+<!-- outer silhouette + hairline dividers -->
+<rect x="140" y="144" width="1000" height="384" rx="8" fill="none" stroke="#15181c" stroke-width="1"/>
+<line x1="140" y1="240" x2="1140" y2="240" stroke="rgba(21,24,28,0.12)" stroke-width="1"/>
+<line x1="140" y1="336" x2="1140" y2="336" stroke="rgba(21,24,28,0.12)" stroke-width="1"/>
+<line x1="140" y1="432" x2="1140" y2="432" stroke="rgba(21,24,28,0.12)" stroke-width="1"/>
+
+<!-- focal layer stroke, drawn over the dividers -->
+<rect x="140" y="240" width="1000" height="96" fill="none" stroke="#c2410c" stroke-width="1.2"/>
+
+<!-- ============ L01 artifact ============ -->
+<rect x="164" y="172" width="28" height="12" rx="2" fill="none" stroke="rgba(21,24,28,0.40)" stroke-width="0.8"/>
+<text x="178" y="181" fill="rgba(21,24,28,0.80)" font-size="7" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.08em">01</text>
+<text x="224" y="184" fill="#15181c" font-size="16" font-weight="700" font-family="'IBM Plex Sans',sans-serif">Artifact</text>
+<text x="224" y="206" fill="#5a616b" font-size="11" font-family="'IBM Plex Sans',sans-serif">Immutable, signed, and self-describing — it carries its own rules about where it may run</text>
+<text x="1116" y="190" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="end">OCI · cosign · SBOM</text>
+
+<!-- ============ L02 contract (focal) ============ -->
+<rect x="164" y="268" width="28" height="12" rx="2" fill="none" stroke="rgba(194,65,12,0.50)" stroke-width="0.8"/>
+<text x="178" y="277" fill="#c2410c" font-size="7" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.08em">02</text>
+<text x="224" y="280" fill="#15181c" font-size="16" font-weight="700" font-family="'IBM Plex Sans',sans-serif">Contract</text>
+<text x="224" y="302" fill="#5a616b" font-size="11" font-family="'IBM Plex Sans',sans-serif">A versioned, schema-validated API between you and the environment — everything site-specific is injected</text>
+<text x="1116" y="286" fill="#c2410c" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="end">values.schema.json</text>
+
+<!-- ============ L03 distribution ============ -->
+<rect x="164" y="364" width="28" height="12" rx="2" fill="none" stroke="rgba(21,24,28,0.40)" stroke-width="0.8"/>
+<text x="178" y="373" fill="rgba(21,24,28,0.80)" font-size="7" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.08em">03</text>
+<text x="224" y="376" fill="#15181c" font-size="16" font-weight="700" font-family="'IBM Plex Sans',sans-serif">Distribution</text>
+<text x="224" y="398" fill="#5a616b" font-size="11" font-family="'IBM Plex Sans',sans-serif">Artifacts cross boundaries as verified copies — no runtime egress, ever</text>
+<text x="1116" y="382" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="end">zarf · oras · skopeo</text>
+
+<!-- ============ L04 reconciliation ============ -->
+<rect x="164" y="460" width="28" height="12" rx="2" fill="none" stroke="rgba(21,24,28,0.40)" stroke-width="0.8"/>
+<text x="178" y="469" fill="rgba(21,24,28,0.80)" font-size="7" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.08em">04</text>
+<text x="224" y="472" fill="#15181c" font-size="16" font-weight="700" font-family="'IBM Plex Sans',sans-serif">Reconciliation</text>
+<text x="224" y="494" fill="#5a616b" font-size="11" font-family="'IBM Plex Sans',sans-serif">An agent inside the environment pulls desired state and converges — you publish intent, never push</text>
+<text x="1116" y="478" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="end">argo cd · flux</text>
+
+<!-- ============ legend ============ -->
+<line x1="140" y1="600" x2="1140" y2="600" stroke="rgba(21,24,28,0.12)" stroke-width="0.8"/>
+<text x="140" y="624" fill="#5a616b" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.14em">LEGEND</text>
+
+<rect x="240" y="614" width="20" height="12" rx="3" fill="rgba(194,65,12,0.08)" stroke="#c2410c" stroke-width="1.2"/>
+<text x="268" y="624" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">highest-leverage plane — get this one wrong and every environment becomes a snowflake</text>
+
+<rect x="800" y="614" width="20" height="12" rx="3" fill="#ffffff" stroke="rgba(21,24,28,0.30)" stroke-width="1"/>
+<text x="828" y="624" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">plane — one invariant each</text>
+</svg>
+</div>
+</body>
+</html>

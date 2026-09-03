@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constraint Evaluation — exclave</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --paper:#f2f4f6; --ink:#15181c; --muted:#5a616b; --accent:#c2410c;
+    --font-serif:'IBM Plex Serif',Georgia,serif;
+    --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+    --font-alt:'IBM Plex Sans',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);
+       display:block;padding:2rem 2rem 2.5rem}
+  .frame{max-width:1280px;width:100%}
+  .eyebrow{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.18em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+  h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:600;
+     letter-spacing:-0.02em;line-height:1.15;margin-bottom:0.5rem}
+  .sub{font-family:var(--font-alt);font-size:0.95rem;color:var(--muted);max-width:64ch;margin-bottom:1.5rem}
+  svg{width:100%;min-width:900px;display:block}
+</style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Flowchart · Resolver</p>
+  <h1>One release, one environment, five checks</h1>
+  <p class="sub">Every check reports a reason whether it passes or fails. A failed channel check is different in kind: the environment was never going to consider that release, so saying so would bury the blockers it can actually act on.</p>
+
+<svg viewBox="0 0 1280 720" role="img" aria-labelledby="resolver-title resolver-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="resolver-title">How the resolver decides whether a release may be installed in an environment</title>
+<desc id="resolver-desc">A release is tested against an environment through five checks in order: channel, schema floor, Kubernetes version range, upgrade path from the currently installed version, and tier and classification lists. Passing all five makes the release eligible. Failing the schema, Kubernetes, upgrade-path, or tier check reports the release as blocked with that reason. Failing the channel check instead marks the release out of channel, which is deliberately not reported as a blocker.</desc>
+
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#5a616b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#c2410c"/></marker>
+</defs>
+
+<rect width="100%" height="100%" fill="#f2f4f6"/>
+
+<!-- ============ arrows (before boxes) ============ -->
+<line x1="160" y1="264" x2="192" y2="264" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="304" y1="264" x2="368" y2="264" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="480" y1="264" x2="544" y2="264" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="656" y1="264" x2="720" y2="264" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="832" y1="264" x2="896" y2="264" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="1008" y1="264" x2="1064" y2="264" stroke="#c2410c" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+
+<!-- failure drops: each takes its own rail, so no two connectors cross -->
+<line x1="248" y1="308" x2="248" y2="436" stroke="#5a616b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+<path d="M 952,308 V 428 Q 952,436 960,436 H 1064" fill="none" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 776,308 V 444 Q 776,452 784,452 H 1064" fill="none" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 600,308 V 460 Q 600,468 608,468 H 1064" fill="none" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 424,308 V 476 Q 424,484 432,484 H 1064" fill="none" stroke="#5a616b" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+<!-- ============ arrow labels (before nodes) ============ -->
+<rect x="320" y="244" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="336" y="254" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+<rect x="496" y="244" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="512" y="254" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+<rect x="672" y="244" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="688" y="254" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+<rect x="848" y="244" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="864" y="254" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+<rect x="1020" y="244" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="1036" y="254" fill="#c2410c" font-size="8" font-family="'IBM Plex Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+
+<rect x="256" y="360" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="260" y="370" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.06em">FAIL</text>
+<rect x="432" y="380" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="436" y="390" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.06em">FAIL</text>
+<rect x="608" y="380" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="612" y="390" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.06em">FAIL</text>
+<rect x="784" y="368" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="788" y="378" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.06em">FAIL</text>
+<rect x="960" y="356" width="32" height="12" rx="2" fill="#f2f4f6"/>
+<text x="964" y="366" fill="#8a929e" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.06em">FAIL</text>
+
+<!-- ============ nodes ============ -->
+<rect x="40" y="236" width="120" height="56" rx="20" fill="#f2f4f6"/>
+<rect x="40" y="236" width="120" height="56" rx="20" fill="rgba(90,97,107,0.10)" stroke="#8a929e" stroke-width="1"/>
+<text x="100" y="260" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Release ×</text>
+<text x="100" y="276" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Environment</text>
+
+<polygon points="248,220 304,264 248,308 192,264" fill="#f2f4f6"/>
+<polygon points="248,220 304,264 248,308 192,264" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="248" y="262" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Channel</text>
+<text x="248" y="278" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">rank ≤ env</text>
+
+<polygon points="424,220 480,264 424,308 368,264" fill="#f2f4f6"/>
+<polygon points="424,220 480,264 424,308 368,264" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="424" y="262" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Schema</text>
+<text x="424" y="278" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">&#8805; floor</text>
+
+<polygon points="600,220 656,264 600,308 544,264" fill="#f2f4f6"/>
+<polygon points="600,220 656,264 600,308 544,264" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="600" y="262" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Kubernetes</text>
+<text x="600" y="278" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">in range</text>
+
+<polygon points="776,220 832,264 776,308 720,264" fill="#f2f4f6"/>
+<polygon points="776,220 832,264 776,308 720,264" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="776" y="262" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Upgrade path</text>
+<text x="776" y="278" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">from current</text>
+
+<polygon points="952,220 1008,264 952,308 896,264" fill="#f2f4f6"/>
+<polygon points="952,220 1008,264 952,308 896,264" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="952" y="262" fill="#15181c" font-size="12" font-weight="600" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Tier · class</text>
+<text x="952" y="278" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">permitted</text>
+
+<rect x="1064" y="236" width="152" height="56" rx="20" fill="#f2f4f6"/>
+<rect x="1064" y="236" width="152" height="56" rx="20" fill="rgba(194,65,12,0.08)" stroke="#c2410c" stroke-width="1.2"/>
+<text x="1140" y="262" fill="#15181c" font-size="13" font-weight="700" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Eligible</text>
+<text x="1140" y="278" fill="#c2410c" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">candidate target</text>
+
+<rect x="1064" y="420" width="152" height="72" rx="20" fill="#f2f4f6"/>
+<rect x="1064" y="420" width="152" height="72" rx="20" fill="rgba(21,24,28,0.05)" stroke="#5a616b" stroke-width="1"/>
+<text x="1140" y="450" fill="#15181c" font-size="13" font-weight="700" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Blocked</text>
+<text x="1140" y="466" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">reported with</text>
+<text x="1140" y="478" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">the failing check</text>
+
+<rect x="172" y="436" width="152" height="72" rx="20" fill="#f2f4f6"/>
+<rect x="172" y="436" width="152" height="72" rx="20" fill="rgba(21,24,28,0.02)" stroke="rgba(21,24,28,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="248" y="466" fill="#15181c" font-size="13" font-weight="700" font-family="'IBM Plex Sans',sans-serif" text-anchor="middle">Out of channel</text>
+<text x="248" y="482" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">not reported as</text>
+<text x="248" y="494" fill="#5a616b" font-size="9" font-family="'IBM Plex Mono',monospace" text-anchor="middle">a blocker</text>
+
+<!-- ============ legend ============ -->
+<line x1="40" y1="600" x2="1240" y2="600" stroke="rgba(21,24,28,0.12)" stroke-width="0.8"/>
+<text x="40" y="624" fill="#5a616b" font-size="8" font-family="'IBM Plex Mono',monospace" letter-spacing="0.14em">LEGEND</text>
+
+<polygon points="152,616 172,626 152,636 132,626" fill="#ffffff" stroke="#15181c" stroke-width="1"/>
+<text x="184" y="630" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">constraint check</text>
+
+<rect x="320" y="618" width="24" height="16" rx="8" fill="rgba(194,65,12,0.08)" stroke="#c2410c" stroke-width="1.2"/>
+<text x="352" y="630" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">eligible</text>
+
+<rect x="440" y="618" width="24" height="16" rx="8" fill="rgba(21,24,28,0.05)" stroke="#5a616b" stroke-width="1"/>
+<text x="472" y="630" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">blocked, with the reason named</text>
+
+<rect x="700" y="618" width="24" height="16" rx="8" fill="rgba(21,24,28,0.02)" stroke="rgba(21,24,28,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="732" y="630" fill="#5a616b" font-size="9" font-family="'IBM Plex Sans',sans-serif">deliberately silent — an environment on stable is not surprised that edge exists</text>
+</svg>
+</div>
+</body>
+</html>

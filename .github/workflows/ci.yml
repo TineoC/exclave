@@ -17,7 +17,8 @@ jobs:
           cache: true
 
       - name: gofmt
-        run: test -z "$(gofmt -l .)" || { gofmt -l .; echo "run: just fmt"; exit 1; }
+        run: |
+          test -z "$(gofmt -l .)" || { gofmt -l .; echo "not formatted; run: just fmt"; exit 1; }
 
       - name: vet
         run: go vet ./...

@@ -21,6 +21,7 @@ check: test
     just validate
     just lint-charts
     just contract
+    just landing-zone
 
 fmt:
     gofmt -w .
@@ -67,6 +68,10 @@ lint-charts:
 # Assert the site-values contract: bad input rejected, every platform seam renders.
 contract:
     ./ci/contract-check.sh
+
+# Assert the landing-zone interface is identical across every provider.
+landing-zone:
+    ./ci/landing-zone-check.sh
 
 # All four planes against a real cluster. Needs docker, kind and kubectl.
 demo:

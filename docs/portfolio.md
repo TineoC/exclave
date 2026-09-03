@@ -195,6 +195,29 @@ Honest scoping. The portfolio control plane is one layer of five:
 The landing zone is Terraform and always will be. Do not try to make a resolver provision a GCP
 organisation.
 
+### The landing zone can still be provider-agnostic
+
+Not by sharing an implementation — org hierarchies, IAM models and billing structures genuinely
+differ — but by sharing an **interface**. Identical inputs, identical outputs, one body per
+provider:
+
+```
+isolation_scope_id      project / account / subscription / cluster
+cluster_endpoint        oidc_issuer_url        workload_identity_ref
+registry_url            audit_sink_destination classification
+```
+
+Everything above the landing zone consumes those outputs and never learns which cloud produced
+them. That is what makes the baseline portable — not the Terraform, which is not.
+
+`topology` is the only branch that matters: `customer-owned` when they granted you a scope inside
+their organisation, `contractor-owned` when you bootstrapped the tree. **Nothing below the parent
+scope differs**, and the on-prem module — no org, no folders, no billing — is what proves the
+interface is real rather than GCP with the names filed off.
+
+Interfaces, the concept mapping per provider, and a conformance check that fails on drift:
+[`examples/landing-zone/`](https://github.com/TineoC/exclave/tree/main/examples/landing-zone).
+
 ## Inherited accreditation is the whole game
 
 Everything above is tractable engineering. This is the part that changes the economics.

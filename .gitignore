@@ -3,3 +3,9 @@ bin/
 .demo/
 **/charts/*/charts/
 **/Chart.lock
+
+# terraform — modules here are interface stubs, no state or providers
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*

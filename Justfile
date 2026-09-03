@@ -41,7 +41,9 @@ explain env version="":
       -catalog {{quickstart}}/catalog \
       -fleet {{quickstart}}/fleet/environments
 
+# Depth-first: svc must vendor `common` before product packages svc.
 lint-charts:
+    helm dependency update {{quickstart}}/charts/svc
     helm dependency update {{quickstart}}/charts/product
     helm lint {{quickstart}}/charts/product
 

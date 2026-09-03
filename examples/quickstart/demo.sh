@@ -91,6 +91,7 @@ billing-svc:
     tag: ""
   replicas: 1
 EOF
+helm dependency update "$HERE/charts/svc" >/dev/null
 helm dependency update "$HERE/charts/product" >/dev/null
 helm template acme "$HERE/charts/product" -f "$SITE" >/dev/null
 echo "  values validated against values.schema.json"

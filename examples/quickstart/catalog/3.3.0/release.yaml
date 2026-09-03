@@ -1,0 +1,23 @@
+product: acme-platform
+version: 3.3.0
+# Not on the stable channel yet. Only environments tracking candidate or edge
+# will consider it.
+channel: edge
+
+components:
+  - name: auth-svc
+    version: 1.5.0
+    image: acme/auth-svc@sha256:6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918
+  - name: billing-svc
+    version: 2.1.0
+    image: acme/billing-svc@sha256:4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5
+
+requires:
+  kubernetes: ">=1.30 <1.34"
+  schema: 9
+
+allowedClassifications: [il4, il5, il6]
+
+provenance:
+  sbom: sbom/spdx.json
+  attestation: attestations/provenance.intoto.jsonl

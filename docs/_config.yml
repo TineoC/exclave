@@ -1,0 +1,5 @@
+title: exclave
+description: A framework for delivering software into environments you cannot log into.
+theme: jekyll-theme-cayman
+show_downloads: false
+markdown: kramdown

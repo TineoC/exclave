@@ -1,0 +1,12 @@
+# An air-gapped site that upgrades its cluster rarely, which is the norm rather
+# than the exception. Nothing in the catalog supports Kubernetes this old, so the
+# plan reports no eligible release and names the reason — the cluster upgrade has
+# to happen before any product upgrade can.
+name: customer-d-prod
+tier: production
+classification: il6
+channel: stable
+kubernetes: "1.26"
+schema: 9
+current: "2.8.0"
+maintenanceWindow: "quarterly, coordinated"

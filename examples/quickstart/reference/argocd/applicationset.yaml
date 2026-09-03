@@ -1,0 +1,35 @@
+# One ApplicationSet generates every Application from the fleet directory, so
+# onboarding an environment is a file, not a manifest.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: acme-platform
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://gitlab.customer.internal/ops/gitops.git
+        revision: main
+        files:
+          - path: "envs/*/acme-platform.yaml"
+  template:
+    metadata:
+      name: 'acme-platform-{{ index .path.segments 1 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: registry.customer.internal/charts
+          chart: acme-platform
+          targetRevision: '{{ .chartVersion }}'
+          helm:
+            valueFiles: ["$site/{{ .path.path }}"]
+        - repoURL: https://gitlab.customer.internal/ops/gitops.git
+          targetRevision: main
+          ref: site
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ index .path.segments 1 }}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]

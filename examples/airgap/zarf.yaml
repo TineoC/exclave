@@ -1,0 +1,24 @@
+# One file crosses the boundary. It carries the chart, every image, and the
+# evidence — nothing is fetched at install time.
+kind: ZarfPackageConfig
+metadata:
+  name: acme-platform
+  version: "3.2.0"
+  description: Air-gapped delivery of the acme-platform product release.
+  architecture: amd64
+
+components:
+  - name: platform
+    required: true
+    charts:
+      - name: acme-platform
+        version: "3.2.0"
+        localPath: ../quickstart/charts/product
+        namespace: acme
+        valuesFiles:
+          - site-values.yaml
+    images:
+      # Digest-pinned. Zarf resolves and embeds these at package-create time, so
+      # the archive contains exactly the bits that were scanned and signed.
+      - "localhost:5001/acme/auth-svc:dev"
+      - "localhost:5001/acme/billing-svc:dev"

@@ -1,0 +1,11 @@
+# Has not run the schema 7 migration. Everything on the stable channel is out of
+# reach until it does, and `exclave plan` names that constraint rather than
+# reporting a bare failure.
+name: customer-c-prod
+tier: production
+classification: il5
+channel: stable
+kubernetes: "1.29"
+schema: 6
+current: "2.9.0"
+maintenanceWindow: "Sun 03:00-05:00 UTC"

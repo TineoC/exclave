@@ -1,0 +1,20 @@
+apiVersion: v2
+name: acme-platform
+version: 3.2.0
+appVersion: "3.2.0"
+description: |
+  The product. A customer installs this one chart at one version; the service
+  versions underneath are an implementation detail they never have to reason about.
+  The dependency list is the tested combination — never let a site mix and match.
+
+# The same svc chart, aliased once per service. The shape is defined once in the
+# common library chart; only values differ.
+dependencies:
+  - name: svc
+    alias: auth-svc
+    version: 0.1.0
+    repository: file://../svc
+  - name: svc
+    alias: billing-svc
+    version: 0.1.0
+    repository: file://../svc

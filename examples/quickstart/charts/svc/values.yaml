@@ -1,0 +1,15 @@
+# Defaults only. Everything site-specific arrives through global.* or an override.
+global:
+  registry: ""
+  product: acme-platform
+  imagePullSecrets: []
+
+image:
+  repository: acme/svc
+  digest: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicas: 1
+port: 8080
+resources: {}

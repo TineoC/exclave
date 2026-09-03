@@ -1,0 +1,18 @@
+# The receiving site's own values. `###ZARF_REGISTRY###` is substituted at deploy
+# time with whatever registry Zarf seeded inside the enclave — the registry
+# indirection from plane 2 is what makes this a one-line change.
+global:
+  registry: "###ZARF_REGISTRY###"
+  product: acme-platform
+
+auth-svc:
+  image:
+    repository: acme/auth-svc
+    tag: "dev"
+  replicas: 2
+
+billing-svc:
+  image:
+    repository: acme/billing-svc
+    tag: "dev"
+  replicas: 2

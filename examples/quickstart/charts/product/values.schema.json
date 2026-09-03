@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "acme-platform site values",
+  "description": "The configuration contract between the product and an environment. Versioned like an API, because that is what it is.",
+  "type": "object",
+  "required": ["global", "auth-svc", "billing-svc"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["registry"],
+      "properties": {
+        "registry": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registry prefix the images were mirrored into. Required: an install must state where its images came from."
+        },
+        "product": { "type": "string" },
+        "imagePullSecrets": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "auth-svc":    { "$ref": "#/definitions/service" },
+    "billing-svc": { "$ref": "#/definitions/service" }
+  },
+  "definitions": {
+    "service": {
+      "type": "object",
+      "required": ["image"],
+      "properties": {
+        "image": {
+          "type": "object",
+          "required": ["repository"],
+          "properties": {
+            "repository": { "type": "string", "minLength": 1 },
+            "digest": {
+              "type": "string",
+              "pattern": "^(sha256:[a-f0-9]{64})?$",
+              "description": "Preferred over tag. Tags are mutable; an assessor will ask."
+            },
+            "tag": { "type": "string" },
+            "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
+          }
+        },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "resources": { "type": "object" }
+      }
+    }
+  }
+}

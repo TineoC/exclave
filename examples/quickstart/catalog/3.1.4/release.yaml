@@ -1,0 +1,23 @@
+product: acme-platform
+version: 3.1.4
+channel: stable
+
+components:
+  - name: auth-svc
+    version: 1.4.0
+    image: acme/auth-svc@sha256:2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+  - name: billing-svc
+    version: 1.9.3
+    image: acme/billing-svc@sha256:fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9
+
+requires:
+  kubernetes: ">=1.28 <1.32"
+  # The schema floor moved. Environments still on 6 cannot take this or anything
+  # after it until they migrate — which is exactly what `exclave plan` will say.
+  schema: 7
+
+allowedClassifications: [il4, il5, il6]
+
+provenance:
+  sbom: sbom/spdx.json
+  attestation: attestations/provenance.intoto.jsonl

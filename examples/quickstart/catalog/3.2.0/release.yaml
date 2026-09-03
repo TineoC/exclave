@@ -1,0 +1,24 @@
+product: acme-platform
+version: 3.2.0
+channel: stable
+
+components:
+  - name: auth-svc
+    version: 1.4.3
+    image: acme/auth-svc@sha256:18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4
+  - name: billing-svc
+    version: 2.0.1
+    image: acme/billing-svc@sha256:5f9c4ab08cac7457e9111a30e4664920607ea2c115a1433e7be8ef7ff0b4b2d7
+
+requires:
+  kubernetes: ">=1.28 <1.32"
+  schema: 7
+  # Upgrade path: this release only knows how to migrate from 3.1 or later.
+  # An environment on 3.0.x must step through 3.1.4 first.
+  platform: ">=3.1"
+
+allowedClassifications: [il4, il5, il6]
+
+provenance:
+  sbom: sbom/spdx.json
+  attestation: attestations/provenance.intoto.jsonl

@@ -1,0 +1,36 @@
+# Reference wiring for customers running Flux. Same chart, same version, same
+# site values — only the controller differs, which is the point.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: acme-charts
+  namespace: acme
+spec:
+  type: oci
+  interval: 10m
+  url: oci://registry.customer.internal/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: acme-platform
+  namespace: acme
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: acme-platform
+      version: "3.2.0"           # what `exclave plan` resolved for this environment
+      sourceRef:
+        kind: HelmRepository
+        name: acme-charts
+  valuesFrom:
+    # The customer's file, managed by the customer.
+    - kind: ConfigMap
+      name: acme-site-values
+  install:
+    createNamespace: true
+  upgrade:
+    remediation:
+      remediateLastFailure: true

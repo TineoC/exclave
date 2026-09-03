@@ -1,0 +1,23 @@
+# The site-values surface fits on one page. That is deliberate: if a customer has
+# to understand the product's internals to install it, the contract has failed.
+global:
+  # Where you mirrored our images. Every image reference resolves through this.
+  registry: "localhost:5001"
+  product: acme-platform
+  imagePullSecrets: []
+
+auth-svc:
+  image:
+    repository: acme/auth-svc
+    digest: ""
+    tag: "1.4.3"
+  replicas: 1
+  port: 8080
+
+billing-svc:
+  image:
+    repository: acme/billing-svc
+    digest: ""
+    tag: "2.0.1"
+  replicas: 1
+  port: 8080

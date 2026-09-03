@@ -1,0 +1,10 @@
+# Environments are data, not pipelines. One file per place the product runs.
+# You have no network path to this cluster; this file is all the resolver knows.
+name: customer-a-prod
+tier: production
+classification: il6
+channel: stable
+kubernetes: "1.29"
+schema: 9
+current: "3.1.4"
+maintenanceWindow: "Sun 02:00-06:00 UTC"

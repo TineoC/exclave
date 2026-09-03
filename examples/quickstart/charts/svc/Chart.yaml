@@ -1,0 +1,10 @@
+apiVersion: v2
+name: svc
+version: 0.1.0
+appVersion: "0.1.0"
+description: One service. Its templates are three include lines; the shape lives in
+  the common library chart.
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: file://../common

@@ -1,0 +1,8 @@
+# Your own lab, tracking edge. Same resolver, same catalog, different channel.
+name: internal-lab
+tier: lab
+classification: il4
+channel: edge
+kubernetes: "1.31"
+schema: 9
+current: "3.3.0"

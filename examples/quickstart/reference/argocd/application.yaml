@@ -1,0 +1,23 @@
+# Reference wiring for customers running Argo CD. The chart is the product; this
+# file is one of two ways to consume it, and you ship both.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: acme-platform
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # The customer's own mirror, never yours.
+    repoURL: registry.customer.internal/charts
+    chart: acme-platform
+    targetRevision: "3.2.0"      # what `exclave plan` resolved for this environment
+    helm:
+      valueFiles:
+        - $site/envs/prod/acme-platform.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: acme
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

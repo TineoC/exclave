@@ -1,0 +1,10 @@
+# Two minor versions behind. The newest stable release cannot migrate directly
+# from 3.0.x, so this environment gets an intermediate hop and is told why.
+name: customer-b-prod
+tier: production
+classification: il5
+channel: stable
+kubernetes: "1.29"
+schema: 9
+current: "3.0.1"
+maintenanceWindow: "Sat 22:00-02:00 UTC"

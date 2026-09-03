@@ -1,0 +1,23 @@
+# The same checks as .github/workflows/ci.yml. Two CI systems running one set of
+# commands is the proof that the framework is not coupled to either — the logic
+# lives in the Justfile and the repository, not in pipeline YAML.
+stages: [check]
+
+check:
+  stage: check
+  image: golang:1.24
+  before_script:
+    - curl -fsSL https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz
+      | tar xz --strip-components=1 -C /usr/local/bin linux-amd64/helm
+  script:
+    - test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+    - go vet ./...
+    - go test ./... -race
+    - go run ./cmd/exclave validate
+        -catalog examples/quickstart/catalog
+        -fleet examples/quickstart/fleet/environments
+    - go run ./cmd/exclave plan
+        -catalog examples/quickstart/catalog
+        -fleet examples/quickstart/fleet/environments
+    - helm dependency update examples/quickstart/charts/product
+    - helm lint examples/quickstart/charts/product

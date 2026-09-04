@@ -4,8 +4,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -46,47 +48,54 @@ func main() {
 	}
 }
 
-func run(args []string) error {
-	fs := flag.NewFlagSet("exclave", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
-	catalogDir := fs.String("catalog", "catalog", "release catalog directory")
-	fleetDir := fs.String("fleet", "fleet/environments", "environment descriptor directory")
-	format := fs.String("format", "text", "output format: text or json")
-	maxClass := fs.String("max-classification", "", "refuse descriptors above this level")
-	manifestFile := fs.String("manifest", "", "manifest file to verify against")
-	keepClass := fs.Bool("keep-classification", false, "include classification in redacted output")
-	fs.Usage = func() { fmt.Fprint(os.Stderr, usage) }
+// options holds every flag the command accepts.
+type options struct {
+	catalogDir   *string
+	fleetDir     *string
+	format       *string
+	maxClass     *string
+	manifestFile *string
+	keepClass    *bool
+}
 
-	// Allow flags on either side of the positional arguments. Go's flag package
-	// stops at the first non-flag argument, so split them apart first.
-	var cmd string
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
-		cmd, args = args[0], args[1:]
+// newFlagSet builds the command's flags. Tests use this rather than declaring a
+// lookalike, so splitArgs is always exercised against the real flag set — a copy
+// would drift the first time someone adds a flag, which is exactly how the
+// boolean-flag bug got in.
+func newFlagSet() (*flag.FlagSet, *options) {
+	fs := flag.NewFlagSet("exclave", flag.ContinueOnError)
+	o := &options{
+		catalogDir:   fs.String("catalog", "catalog", "release catalog directory"),
+		fleetDir:     fs.String("fleet", "fleet/environments", "environment descriptor directory"),
+		format:       fs.String("format", "text", "output format: text or json"),
+		maxClass:     fs.String("max-classification", "", "refuse descriptors above this level"),
+		manifestFile: fs.String("manifest", "", "manifest file to verify against"),
+		keepClass:    fs.Bool("keep-classification", false, "include classification in redacted output"),
 	}
-	isBool := func(a string) bool {
-		f := fs.Lookup(strings.TrimLeft(a, "-"))
-		if f == nil {
-			return false
-		}
-		b, ok := f.Value.(interface{ IsBoolFlag() bool })
-		return ok && b.IsBoolFlag()
-	}
-	var flags, positional []string
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		if !strings.HasPrefix(a, "-") {
-			positional = append(positional, a)
-			continue
-		}
-		flags = append(flags, a)
-		// A boolean flag takes no value; consuming the next argument would eat a
-		// positional. Everything else needs its value pulled along.
-		if !strings.Contains(a, "=") && !isBool(a) && i+1 < len(args) {
-			flags = append(flags, args[i+1])
-			i++
-		}
-	}
+	return fs, o
+}
+
+func run(args []string) error {
+	fs, opt := newFlagSet()
+	catalogDir, fleetDir := opt.catalogDir, opt.fleetDir
+	format, maxClass := opt.format, opt.maxClass
+	manifestFile, keepClass := opt.manifestFile, opt.keepClass
+	// The flag package writes its own errors and usage; we want --help on stdout
+	// with exit 0, and a single error line otherwise, so we own all output.
+	fs.SetOutput(io.Discard)
+	fs.Usage = func() {}
+
+	cmd, flags, positional := splitArgs(fs, args)
+
 	if err := fs.Parse(flags); err != nil {
+		// -h and --help start with a dash, so they never become the subcommand.
+		// They reach fs.Parse, which returns ErrHelp — propagating that as an
+		// error made `exclave --help` exit 1 with "error: flag: help requested".
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Print(usage)
+			return nil
+		}
+		fmt.Fprint(os.Stderr, usage, "\n")
 		return err
 	}
 	if *format != "text" && *format != "json" {
@@ -113,12 +122,50 @@ func run(args []string) error {
 		return cmdVerify(*catalogDir, *manifestFile)
 	case "redact":
 		return cmdRedact(*catalogDir, *fleetDir, *maxClass, *format, *keepClass)
-	case "", "help", "-h", "--help":
+	case "", "help":
 		fmt.Print(usage)
 		return nil
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
+}
+
+// splitArgs separates the subcommand, the flags and the positional arguments.
+//
+// Go's flag package stops parsing at the first non-flag argument, so flags after
+// a positional would be silently ignored. Splitting them first lets
+// `exclave explain army-abc-il5 4.3.0 -catalog dir` work the way anyone expects.
+//
+// The subtlety is boolean flags: consuming the next argument as their value eats
+// a positional. `fs.Lookup` is the authority on which flags are boolean, rather
+// than a hand-maintained list that drifts the moment someone adds a flag.
+func splitArgs(fs *flag.FlagSet, args []string) (cmd string, flags, positional []string) {
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		cmd, args = args[0], args[1:]
+	}
+
+	isBool := func(a string) bool {
+		f := fs.Lookup(strings.TrimLeft(a, "-"))
+		if f == nil {
+			return false
+		}
+		b, ok := f.Value.(interface{ IsBoolFlag() bool })
+		return ok && b.IsBoolFlag()
+	}
+
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !strings.HasPrefix(a, "-") {
+			positional = append(positional, a)
+			continue
+		}
+		flags = append(flags, a)
+		if !strings.Contains(a, "=") && !isBool(a) && i+1 < len(args) {
+			flags = append(flags, args[i+1])
+			i++
+		}
+	}
+	return cmd, flags, positional
 }
 
 func load(catalogDir, fleetDir, maxClass string) ([]catalog.Release, []fleet.Environment, error) {
